@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          keyframes: {
+            fadeIn:  { from: { opacity: '0', transform: 'translateY(8px)' },
+                       to:   { opacity: '1', transform: 'translateY(0)' } },
+            fadeOut: { from: { opacity: '1', transform: 'scale(1)' },
+                       to:   { opacity: '0', transform: 'scale(0.92)' } },
+          },
+          animation: {
+            'fade-in':  'fadeIn 0.22s ease both',
+            'fade-out': 'fadeOut 0.2s ease forwards',
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    input[type="checkbox"]  { accent-color: #4f46e5; }
+    input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.65rem center; background-size: 1rem; appearance: none; -webkit-appearance: none; padding-right: 2.25rem; }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800 antialiased">
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────── -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm">
+          <svg class="w-[18px] h-[18px] text-white" fill="none" stroke="currentColor"
+               stroke-width="2.2" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987
+                     8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292
+                     c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0
+                     00-6 2.292m0-14.25v14.25" />
+          </svg>
+        </div>
+        <span class="text-[17px] font-bold text-slate-800 tracking-tight">Study Planner</span>
+      </div>
+      <div id="nav-pill"
+           class="hidden items-center gap-1.5 text-xs font-semibold text-indigo-600
+                  bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
+        <span id="nav-pill-text"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+    <!-- ── Alert ─────────────────────────────────────────────────────── -->
+    <div id="alert"
+         class="hidden items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                border shadow-sm animate-fade-in"
+         role="alert" aria-live="polite">
+      <span id="alert-icon" class="text-base leading-none"></span>
+      <span id="alert-text"></span>
+    </div>
+
+    <!-- ── Create Form ───────────────────────────────────────────────── -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+        <h2 class="text-[15px] font-semibold text-slate-700">Add New Task</h2>
+      </div>
+
+      <form id="task-form" class="px-6 py-5" novalidate>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <!-- Title -->
+          <div class="flex flex-col gap-1.5 lg:col-span-2">
+            <label for="f-title" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Title <span class="text-rose-500">*</span>
+            </label>
+            <input id="f-title" type="text" autocomplete="off"
+                   placeholder="e.g. Complete chapter 3"
+                   class="input-base" />
+          </div>
+
+          <!-- Subject -->
+          <div class="flex flex-col gap-1.5">
+            <label for="f-subject" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Subject <span class="text-rose-500">*</span>
+            </label>
+            <input id="f-subject" type="text" autocomplete="off"
+                   placeholder="e.g. Mathematics"
+                   class="input-base" />
+          </div>
+
+          <!-- Priority -->
+          <div class="flex flex-col gap-1.5">
+            <label for="f-priority" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Priority
+            </label>
+            <select id="f-priority" class="input-base">
+              <option value="High">🔴 High</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+
+          <!-- Category -->
+          <div class="flex flex-col gap-1.5">
+            <label for="f-category" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Category
+            </label>
+            <select id="f-category" class="input-base">
+              <option value="Assignment">Assignment</option>
+              <option value="Exam">Exam</option>
+              <option value="Reading">Reading</option>
+              <option value="Project">Project</option>
+              <option value="General" selected>General</option>
+            </select>
+          </div>
+
+          <!-- Due Date -->
+          <div class="flex flex-col gap-1.5">
+            <label for="f-due" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Due Date <span class="text-rose-500">*</span>
+            </label>
+            <input id="f-due" type="date" class="input-base" />
+          </div>
+
+          <!-- Description -->
+          <div class="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3">
+            <label for="f-desc" class="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Description
+            </label>
+            <textarea id="f-desc" rows="2"
+                      placeholder="Optional — notes, resources, scope…"
+                      class="input-base resize-none"></textarea>
+          </div>
+
+          <!-- Submit -->
+          <div class="sm:col-span-2 lg:col-span-3 flex justify-end pt-1">
+            <button id="submit-btn" type="submit"
+                    class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700
+                           active:scale-95 text-white text-sm font-semibold
+                           px-5 py-2.5 rounded-xl shadow-sm transition-all duration-150
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span id="submit-label">Add Task</span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </section>
+
+    <!-- ── Task List ─────────────────────────────────────────────────── -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-[15px] font-semibold text-slate-700">Your Tasks</h2>
+        <div id="stats-row" class="hidden items-center gap-2 text-xs text-slate-500">
+          <span id="stat-pending" class="font-semibold text-slate-700"></span> pending ·
+          <span id="stat-done"    class="font-semibold text-slate-700"></span> done
+        </div>
+      </div>
+
+      <!-- ── Control Bar ──────────────────────────────────────────────── -->
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-sm px-4 py-3 mb-5">
+
+        <!-- Row 1: Search -->
+        <div class="relative mb-3">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"
+               fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+          </svg>
+          <input id="ctrl-search" type="search" autocomplete="off"
+                 placeholder="Search by title, subject, or description…"
+                 class="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-3 py-2
+                        text-sm text-slate-800 placeholder:text-slate-400
+                        focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                        transition-shadow" />
+        </div>
+
+        <!-- Row 2: Dropdowns + Reset -->
+        <div class="flex flex-wrap items-center gap-2">
+
+          <!-- Priority filter -->
+          <div class="relative">
+            <select id="ctrl-priority"
+                    class="ctrl-select rounded-lg border border-slate-300 bg-slate-50
+                           pl-3 pr-8 py-2 text-xs font-medium text-slate-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                           transition-shadow cursor-pointer appearance-none">
+              <option value="">All Priorities</option>
+              <option value="High">🔴 High</option>
+              <option value="Medium">🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+          </div>
+
+          <!-- Category filter -->
+          <div class="relative">
+            <select id="ctrl-category"
+                    class="ctrl-select rounded-lg border border-slate-300 bg-slate-50
+                           pl-3 pr-8 py-2 text-xs font-medium text-slate-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                           transition-shadow cursor-pointer appearance-none">
+              <option value="">All Categories</option>
+              <option value="Assignment">📝 Assignment</option>
+              <option value="Exam">📋 Exam</option>
+              <option value="Reading">📖 Reading</option>
+              <option value="Project">🗂️ Project</option>
+              <option value="General">📌 General</option>
+            </select>
+          </div>
+
+          <!-- Status filter -->
+          <div class="relative">
+            <select id="ctrl-status"
+                    class="ctrl-select rounded-lg border border-slate-300 bg-slate-50
+                           pl-3 pr-8 py-2 text-xs font-medium text-slate-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                           transition-shadow cursor-pointer appearance-none">
+              <option value="">All Tasks</option>
+              <option value="incomplete">Incomplete</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+
+          <!-- Divider -->
+          <div class="hidden sm:block w-px h-5 bg-slate-200 mx-1"></div>
+
+          <!-- Sort -->
+          <div class="relative">
+            <select id="ctrl-sort"
+                    class="ctrl-select rounded-lg border border-slate-300 bg-slate-50
+                           pl-3 pr-8 py-2 text-xs font-medium text-slate-600
+                           focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+                           transition-shadow cursor-pointer appearance-none">
+              <option value="due_asc">Due Date ↑</option>
+              <option value="due_desc">Due Date ↓</option>
+              <option value="priority">Priority (High → Low)</option>
+              <option value="title_az">Title (A → Z)</option>
+            </select>
+          </div>
+
+          <!-- Spacer -->
+          <div class="flex-1"></div>
+
+          <!-- Active-filter badge + reset -->
+          <div id="filter-badge" class="hidden items-center gap-2">
+            <span id="filter-count"
+                  class="text-[11px] font-semibold text-indigo-600 bg-indigo-50
+                         border border-indigo-100 px-2 py-0.5 rounded-full">
+            </span>
+            <button id="ctrl-reset"
+                    class="text-xs font-semibold text-slate-500 hover:text-rose-600
+                           hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors
+                           focus:outline-none focus:ring-2 focus:ring-rose-300">
+              ✕ Reset
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Spinner -->
+      <div id="loading" class="flex flex-col items-center justify-center py-20 gap-3">
+        <svg class="w-8 h-8 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        <p class="text-sm text-slate-400 font-medium">Loading tasks…</p>
+      </div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden flex-col items-center justify-center py-20 gap-4 text-slate-400">
+        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center">
+          <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
+                     M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </div>
+        <div class="text-center">
+          <p class="font-semibold text-slate-500 text-sm">No tasks yet</p>
+          <p class="text-xs mt-1">Add your first task using the form above.</p>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div id="task-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+  </main>
+
+  <!-- ── Delete Modal ──────────────────────────────────────────────────── -->
+  <div id="modal-backdrop"
+       class="hidden fixed inset-0 bg-black/40 backdrop-blur-[2px] z-40
+              flex items-center justify-center px-4"
+       role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4 animate-fade-in">
+      <div class="flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0
+                     2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697
+                     16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+        <div>
+          <h3 id="modal-title" class="font-semibold text-slate-800 text-sm">Delete Task</h3>
+          <p class="text-xs text-slate-500 mt-1">
+            Delete <span id="modal-task-name" class="font-semibold text-slate-700"></span>?
+            This cannot be undone.
+          </p>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button id="modal-cancel"
+                class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100
+                       hover:bg-slate-200 rounded-lg transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-slate-300">
+          Cancel
+        </button>
+        <button id="modal-confirm"
+                class="px-4 py-2 text-sm font-medium text-white bg-rose-500
+                       hover:bg-rose-600 rounded-lg transition-colors shadow-sm
+                       focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-1">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Shared input styles via Tailwind @apply equivalent ────────────── -->
+  <style>
+    .input-base {
+      @apply rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm
+             text-slate-800 placeholder:text-slate-400
+             focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
+             transition-shadow w-full;
+    }
+  </style>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const API = '/tasks';
+
+    // ── Priority config ─────────────────────────────────────────────────
+    const PRIORITY = {
+      High:   { dot: 'bg-rose-500',   badge: 'bg-rose-100 text-rose-700 ring-rose-200',   label: 'High'   },
+      Medium: { dot: 'bg-amber-400',  badge: 'bg-amber-100 text-amber-700 ring-amber-200', label: 'Medium' },
+      Low:    { dot: 'bg-emerald-500',badge: 'bg-emerald-100 text-emerald-700 ring-emerald-200', label: 'Low' },
+    };
+
+    // ── Category config ─────────────────────────────────────────────────
+    const CATEGORY = {
+      Assignment: { icon: '📝', badge: 'bg-violet-100 text-violet-700 ring-violet-200' },
+      Exam:       { icon: '📋', badge: 'bg-rose-100 text-rose-700 ring-rose-200'       },
+      Reading:    { icon: '📖', badge: 'bg-sky-100 text-sky-700 ring-sky-200'           },
+      Project:    { icon: '🗂️', badge: 'bg-orange-100 text-orange-700 ring-orange-200' },
+      General:    { icon: '📌', badge: 'bg-slate-100 text-slate-600 ring-slate-200'    },
+    };
+
+    // ── Subject palette ─────────────────────────────────────────────────
+    const SUBJECT_PALETTES = [
+      { bg: 'bg-violet-100', text: 'text-violet-700', ring: 'ring-violet-200' },
+      { bg: 'bg-sky-100',    text: 'text-sky-700',    ring: 'ring-sky-200'    },
+      { bg: 'bg-amber-100',  text: 'text-amber-700',  ring: 'ring-amber-200'  },
+      { bg: 'bg-teal-100',   text: 'text-teal-700',   ring: 'ring-teal-200'   },
+      { bg: 'bg-pink-100',   text: 'text-pink-700',   ring: 'ring-pink-200'   },
+      { bg: 'bg-orange-100', text: 'text-orange-700', ring: 'ring-orange-200' },
+      { bg: 'bg-indigo-100', text: 'text-indigo-700', ring: 'ring-indigo-200' },
+      { bg: 'bg-emerald-100',text: 'text-emerald-700',ring: 'ring-emerald-200'},
+    ];
+
+    function subjectPalette(subject) {
+      let h = 0;
+      for (const c of subject) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+      return SUBJECT_PALETTES[h % SUBJECT_PALETTES.length];
+    }
+
+    // ── Date helpers ────────────────────────────────────────────────────
+    function todayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const [y,m,d] = iso.split('-');
+      return new Date(+y, +m-1, +d).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+    }
+    function isOverdue(iso) { return iso < todayISO(); }
+
+    // ── Escape ──────────────────────────────────────────────────────────
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Alert ───────────────────────────────────────────────────────────
+    let alertTimer = null;
+    function showAlert(msg, type = 'success') {
+      const el = document.getElementById('alert');
+      const styles = {
+        success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+        error:   'bg-rose-50 border-rose-200 text-rose-800',
+        info:    'bg-indigo-50 border-indigo-100 text-indigo-800',
+      };
+      const icons = { success: '✓', error: '✕', info: 'ℹ' };
+      clearTimeout(alertTimer);
+      el.className = `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium border shadow-sm animate-fade-in ${styles[type]}`;
+      document.getElementById('alert-icon').textContent = icons[type];
+      document.getElementById('alert-text').textContent = msg;
+      el.classList.remove('hidden');
+      alertTimer = setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    // ── Filter + sort state ─────────────────────────────────────────────
+    // allTasks holds every task fetched from the API.
+    // Controls read from DOM and applied in-memory on every re-render.
+    let allTasks = [];
+
+    const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 };
+
+    function getControls() {
+      return {
+        search:   (document.getElementById('ctrl-search')?.value   ?? '').trim().toLowerCase(),
+        priority: document.getElementById('ctrl-priority')?.value  ?? '',
+        category: document.getElementById('ctrl-category')?.value  ?? '',
+        status:   document.getElementById('ctrl-status')?.value    ?? '',
+        sort:     document.getElementById('ctrl-sort')?.value      ?? 'due_asc',
+      };
+    }
+
+    function isFiltersActive(c) {
+      return c.search || c.priority || c.category || c.status;
+    }
+
+    function applyFiltersAndSort(tasks) {
+      const c = getControls();
+
+      let result = tasks.filter(t => {
+        if (c.priority && t.priority !== c.priority) return false;
+        if (c.category && t.category !== c.category) return false;
+        if (c.status === 'incomplete' &&  t.completed) return false;
+        if (c.status === 'completed'  && !t.completed) return false;
+        if (c.search) {
+          const hay = `${t.title} ${t.subject} ${t.description ?? ''}`.toLowerCase();
+          if (!hay.includes(c.search)) return false;
+        }
+        return true;
+      });
+
+      result.sort((a, b) => {
+        switch (c.sort) {
+          case 'due_desc':
+            return a.due_date > b.due_date ? -1 : a.due_date < b.due_date ? 1 : 0;
+          case 'priority':
+            return (PRIORITY_ORDER[a.priority] ?? 1) - (PRIORITY_ORDER[b.priority] ?? 1);
+          case 'title_az':
+            return a.title.localeCompare(b.title);
+          default: // due_asc — incomplete first, then ascending due date
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            return a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : 0;
+        }
+      });
+
+      return result;
+    }
+
+    function updateFilterBadge(c, matchCount, totalCount) {
+      const badge = document.getElementById('filter-badge');
+      const count = document.getElementById('filter-count');
+      if (isFiltersActive(c)) {
+        count.textContent = `${matchCount} of ${totalCount}`;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      } else {
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
+      }
+    }
+
+    // ── Build card ──────────────────────────────────────────────────────
+    function buildCard(task) {
+      const pal      = subjectPalette(task.subject);
+      const pri      = PRIORITY[task.priority]  ?? PRIORITY.Medium;
+      const cat      = CATEGORY[task.category]  ?? CATEGORY.General;
+      const overdue  = !task.completed && isOverdue(task.due_date);
+      const initial  = (task.subject[0] ?? '?').toUpperCase();
+
+      const card = document.createElement('article');
+      card.id = `card-${task.id}`;
+      card.className = [
+        'group relative bg-white rounded-2xl border shadow-sm flex flex-col',
+        'overflow-hidden transition-all duration-200 animate-fade-in',
+        task.completed
+          ? 'border-slate-200 opacity-55 grayscale'
+          : 'border-slate-200 hover:shadow-md hover:-translate-y-0.5',
+      ].join(' ');
+
+      card.innerHTML = `
+        <!-- Priority colour strip -->
+        <div class="h-1 w-full ${
+          task.priority === 'High'   ? 'bg-rose-400'   :
+          task.priority === 'Low'    ? 'bg-emerald-400' : 'bg-amber-300'
+        }"></div>
+
+        <div class="p-5 flex flex-col gap-3 flex-1">
+
+          <!-- Row 1: avatar + title + delete -->
+          <div class="flex items-start gap-3">
+            <!-- Subject avatar -->
+            <div class="shrink-0 w-9 h-9 rounded-xl ${pal.bg} ${pal.text}
+                        flex items-center justify-center font-bold text-sm ring-1 ${pal.ring}">
+              ${esc(initial)}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-semibold text-slate-800 leading-snug break-words
+                         ${task.completed ? 'line-through text-slate-400' : ''}">
+                ${esc(task.title)}
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">${esc(task.subject)}</p>
+            </div>
+
+            <!-- Delete button -->
+            <button data-delete="${task.id}" data-title="${esc(task.title)}"
+                    class="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center
+                           text-slate-300 hover:text-rose-500 hover:bg-rose-50
+                           transition-colors opacity-0 group-hover:opacity-100
+                           focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                    aria-label="Delete ${esc(task.title)}">
+              <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor"
+                   stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107
+                         1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084
+                         a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0
+                         00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11
+                         0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964
+                         0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667
+                         48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Row 2: Priority + Category badges -->
+          <div class="flex items-center flex-wrap gap-1.5">
+            <!-- Priority badge -->
+            <span class="inline-flex items-center gap-1 text-[11px] font-semibold
+                         px-2 py-0.5 rounded-full ring-1 ${pri.badge}">
+              <span class="w-1.5 h-1.5 rounded-full ${pri.dot} inline-block"></span>
+              ${esc(pri.label)}
+            </span>
+            <!-- Category badge -->
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium
+                         px-2 py-0.5 rounded-full ring-1 ${cat.badge}">
+              <span class="text-[10px]">${cat.icon}</span>
+              ${esc(task.category)}
+            </span>
+          </div>
+
+          ${task.description ? `
+          <!-- Description sub-card -->
+          <div class="bg-slate-50 rounded-xl px-3 py-2.5 text-xs text-slate-500
+                      leading-relaxed border border-slate-100 break-words">
+            ${esc(task.description)}
+          </div>` : ''}
+
+          <!-- Row 3: Due date -->
+          <div class="flex items-center gap-1.5 text-xs mt-auto
+                      ${overdue ? 'text-rose-500 font-semibold' : 'text-slate-400'}">
+            ${overdue
+              ? `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round"
+                         d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                 </svg>Overdue ·`
+              : `<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round"
+                         d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25
+                            2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021
+                            18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                 </svg>`
+            }
+            ${esc(fmtDate(task.due_date))}
+          </div>
+
+          <hr class="border-slate-100" />
+
+          <!-- Row 4: Completion toggle -->
+          <label class="flex items-center gap-2.5 cursor-pointer select-none group/chk">
+            <input type="checkbox" ${task.completed ? 'checked' : ''}
+                   data-toggle="${task.id}"
+                   class="w-4 h-4 rounded cursor-pointer" />
+            <span class="text-xs font-medium transition-colors
+                         ${task.completed ? 'text-emerald-600' : 'text-slate-500 group-hover/chk:text-slate-700'}">
+              ${task.completed ? 'Completed' : 'Mark as complete'}
+            </span>
+            ${task.completed
+              ? `<svg class="w-3.5 h-3.5 text-emerald-500 ml-auto" fill="none"
+                      stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                 </svg>`
+              : ''}
+          </label>
+
+        </div>
+      `;
+      return card;
+    }
+
+    // ── Render ──────────────────────────────────────────────────────────
+    // Accepts the full unfiltered list; applies controls in-memory.
+    function renderTasks(tasks) {
+      const grid  = document.getElementById('task-grid');
+      const empty = document.getElementById('empty-state');
+      const stats = document.getElementById('stats-row');
+      const pill  = document.getElementById('nav-pill');
+
+      // Nav pill always reflects the total count
+      const totalCount   = tasks.length;
+      const totalPending = tasks.filter(t => !t.completed).length;
+      const totalDone    = totalCount - totalPending;
+
+      document.getElementById('nav-pill-text').textContent = `${totalCount} task${totalCount !== 1 ? 's' : ''}`;
+      pill.classList.toggle('hidden', totalCount === 0);
+      pill.classList.toggle('flex',   totalCount > 0);
+
+      document.getElementById('stat-pending').textContent = totalPending;
+      document.getElementById('stat-done').textContent    = totalDone;
+      stats.classList.toggle('hidden', totalCount === 0);
+      stats.classList.toggle('flex',   totalCount > 0);
+
+      // Apply active filters + sort
+      const c        = getControls();
+      const filtered = applyFiltersAndSort(tasks);
+
+      updateFilterBadge(c, filtered.length, totalCount);
+
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        // Differentiate "no tasks at all" from "filters returned nothing"
+        const isFiltered = isFiltersActive(c);
+        const emptyIcon = empty.querySelector('svg');
+        const emptyTitle = empty.querySelector('p:first-of-type');
+        const emptyBody  = empty.querySelector('p:last-of-type');
+        const existingReset = empty.querySelector('#empty-reset');
+
+        if (emptyTitle)  emptyTitle.textContent  = isFiltered ? 'No matching tasks' : 'No tasks yet';
+        if (emptyBody)   emptyBody.textContent   = isFiltered
+          ? 'Try adjusting your filters or search query.'
+          : 'Add your first task using the form above.';
+
+        // Show/hide inline reset button inside empty state
+        if (isFiltered) {
+          if (!existingReset) {
+            const btn = document.createElement('button');
+            btn.id = 'empty-reset';
+            btn.textContent = '↺ Reset Filters';
+            btn.className = 'mt-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 '
+                          + 'bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 '
+                          + 'px-3 py-1.5 rounded-lg transition-colors '
+                          + 'focus:outline-none focus:ring-2 focus:ring-indigo-400';
+            btn.addEventListener('click', resetFilters);
+            empty.appendChild(btn);
+          }
+        } else {
+          existingReset?.remove();
+        }
+
+        empty.classList.remove('hidden'); empty.classList.add('flex');
+        return;
+      }
+
+      empty.classList.add('hidden'); empty.classList.remove('flex');
+      filtered.forEach(t => grid.appendChild(buildCard(t)));
+    }
+
+    // ── Load ─────────────────────────────────────────────────────────────
+    // Fetches from the API, caches in allTasks, then renders with active filters.
+    async function loadTasks() {
+      const loading = document.getElementById('loading');
+      loading.classList.remove('hidden'); loading.classList.add('flex');
+      document.getElementById('task-grid').innerHTML = '';
+      document.getElementById('empty-state').classList.add('hidden');
+      try {
+        const res = await fetch(`${API}/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allTasks = await res.json();
+        renderTasks(allTasks);
+      } catch (err) {
+        showAlert('Could not load tasks — is the API running?', 'error');
+        console.error(err);
+      } finally {
+        loading.classList.add('hidden'); loading.classList.remove('flex');
+      }
+    }
+
+    // ── Re-render in memory (no API call) ────────────────────────────────
+    function applyControls() {
+      renderTasks(allTasks);
+    }
+
+    // ── Reset all filters ────────────────────────────────────────────────
+    function resetFilters() {
+      document.getElementById('ctrl-search').value   = '';
+      document.getElementById('ctrl-priority').value = '';
+      document.getElementById('ctrl-category').value = '';
+      document.getElementById('ctrl-status').value   = '';
+      document.getElementById('ctrl-sort').value     = 'due_asc';
+      applyControls();
+    }
+
+    // ── Toggle completion ────────────────────────────────────────────────
+    async function toggleComplete(id, completed) {
+      try {
+        const res = await fetch(`${API}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        // Refresh cache from API, then re-apply active filters
+        await loadTasks();
+      } catch (err) {
+        showAlert('Failed to update task.', 'error');
+        console.error(err);
+      }
+    }
+
+    // ── Delete ───────────────────────────────────────────────────────────
+    async function deleteTask(id) {
+      try {
+        const res = await fetch(`${API}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const card = document.getElementById(`card-${id}`);
+        if (card) {
+          card.classList.add('animate-fade-out');
+          // After animation, reload cache and re-render with current filters
+          card.addEventListener('animationend', loadTasks, { once: true });
+        } else {
+          await loadTasks();
+        }
+        showAlert('Task deleted.', 'info');
+      } catch (err) {
+        showAlert('Failed to delete task.', 'error');
+        console.error(err);
+      }
+    }
+
+    // ── Modal ────────────────────────────────────────────────────────────
+    let pendingId = null;
+    function openModal(id, title) {
+      pendingId = id;
+      document.getElementById('modal-task-name').textContent = `"${title}"`;
+      const bd = document.getElementById('modal-backdrop');
+      bd.classList.remove('hidden'); bd.classList.add('flex');
+      document.getElementById('modal-confirm').focus();
+    }
+    function closeModal() {
+      pendingId = null;
+      const bd = document.getElementById('modal-backdrop');
+      bd.classList.add('hidden'); bd.classList.remove('flex');
+    }
+    document.getElementById('modal-cancel').addEventListener('click', closeModal);
+    document.getElementById('modal-backdrop').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    document.getElementById('modal-confirm').addEventListener('click', async () => {
+      if (pendingId === null) return;
+      const id = pendingId; closeModal(); await deleteTask(id);
+    });
+
+    // ── Event delegation ─────────────────────────────────────────────────
+    document.getElementById('task-grid').addEventListener('change', e => {
+      const cb = e.target.closest('[data-toggle]');
+      if (cb) toggleComplete(+cb.dataset.toggle, cb.checked);
+    });
+    document.getElementById('task-grid').addEventListener('click', e => {
+      const btn = e.target.closest('[data-delete]');
+      if (btn) openModal(+btn.dataset.delete, btn.dataset.title);
+    });
+
+    // ── Form submit ──────────────────────────────────────────────────────
+    document.getElementById('task-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const title       = document.getElementById('f-title').value.trim();
+      const subject     = document.getElementById('f-subject').value.trim();
+      const due_date    = document.getElementById('f-due').value;
+      const description = document.getElementById('f-desc').value.trim();
+      const priority    = document.getElementById('f-priority').value;
+      const category    = document.getElementById('f-category').value;
+
+      if (!title || !subject || !due_date) {
+        showAlert('Title, subject, and due date are required.', 'error'); return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      const lbl = document.getElementById('submit-label');
+      btn.disabled = true; lbl.textContent = 'Adding…';
+
+      try {
+        const res = await fetch(`${API}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, subject, due_date, priority, category,
+                                 description: description || null, completed: false }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail ?? `HTTP ${res.status}`);
+        }
+        showAlert('Task added!', 'success');
+        e.target.reset();
+        // reset selects to defaults
+        document.getElementById('f-priority').value = 'Medium';
+        document.getElementById('f-category').value = 'General';
+        await loadTasks();
+      } catch (err) {
+        showAlert(`Could not add task: ${err.message}`, 'error');
+        console.error(err);
+      } finally {
+        btn.disabled = false; lbl.textContent = 'Add Task';
+      }
+    });
+
+    // ── Control bar events ───────────────────────────────────────────────
+    // All controls re-render in memory — no extra API call needed.
+    let searchDebounce = null;
+    document.getElementById('ctrl-search').addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(applyControls, 180);
+    });
+    ['ctrl-priority', 'ctrl-category', 'ctrl-status', 'ctrl-sort'].forEach(id => {
+      document.getElementById(id).addEventListener('change', applyControls);
+    });
+    document.getElementById('ctrl-reset').addEventListener('click', resetFilters);
+
+    // ── Boot ─────────────────────────────────────────────────────────────
+    loadTasks();
+  })();
+  </script>
+
+</body>
+</html>

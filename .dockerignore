@@ -1,0 +1,25 @@
+# Python virtual environment — dependencies are installed inside the image
+.venv/
+
+# Python bytecode caches — not needed in the image
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Pytest cache
+.pytest_cache/
+
+# Git metadata
+.git/
+.gitignore
+
+# SQLite database files — the container uses a Docker volume for persistence
+*.db
+
+# Editor / OS artefacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
