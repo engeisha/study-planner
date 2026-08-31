@@ -184,3 +184,9 @@ Tests use a separate in-memory database and never affect the production `study_p
 
 5. **DELETE** — `DELETE /tasks/{task_id}`  
    Deletes the row from the database. Returns `204 No Content` on success. Returns 404 if the task does not exist.
+
+
+
+
+
+i added a new line
