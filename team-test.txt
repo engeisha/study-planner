@@ -1,2 +1,2 @@
 Line 1: Initial team project plan
-Line 2: Developer A added user notifications
+Line 2: Developer B added payment gateways
